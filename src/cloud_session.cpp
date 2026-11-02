@@ -324,7 +324,16 @@ int CloudSession::publish(const std::string& dev_id,
         OBN_WARN("cloud mqtt: publish to %s while disconnected", dev_id.c_str());
         return BAMBU_NETWORK_ERR_SEND_MSG_FAILED;
     }
-    int rc = client->publish(request_topic_(dev_id), json_str, qos, /*retain=*/false);
+    // Printer commands always go out at QoS 0. libmosquitto keeps an
+    // unacknowledged QoS 1 publish in its outgoing in-flight queue across
+    // reconnects and re-sends it after the next CONNACK, even with
+    // clean_session=true (message__reconnect_reset + message__retry_check).
+    // A stop/pause sent hours earlier was replayed that way when the LAN
+    // link dropped ("Malformed packet") and came back, cancelling a print
+    // at 81%. A command the printer did not get is visible in its next
+    // report; a stale command delivered late is not recoverable.
+    (void)qos;
+    int rc = client->publish(request_topic_(dev_id), json_str, /*qos=*/0, /*retain=*/false);
     if (rc != MOSQ_ERR_SUCCESS) {
         OBN_WARN("cloud mqtt: publish to %s rc=%d (%s)",
                  dev_id.c_str(), rc, mqtt::Client::err_str(rc));
