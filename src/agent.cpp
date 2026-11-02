@@ -2088,6 +2088,7 @@ void Agent::notify_local_message(const std::string& dev_id, const std::string& j
         const int plate_idx = resolve_cover_plate_idx(patched);
 
         std::string host, user, pass;
+        bool        new_job = false;
         {
             std::lock_guard<std::mutex> lk(mu_);
             if (lan_session_) {
@@ -2095,6 +2096,7 @@ void Agent::notify_local_message(const std::string& dev_id, const std::string& j
                 user = lan_session_->username();
                 pass = lan_session_->password();
             }
+            new_job = !synthetic_subtasks_.count(cover_id);
             synthetic_subtasks_[cover_id] =
                 SyntheticSubtask{subtask_name, plate_idx, cover_version};
             // Cap the map; the user only ever cares about the current
@@ -2110,6 +2112,13 @@ void Agent::notify_local_message(const std::string& dev_id, const std::string& j
                     cover_server_.reset();
                 }
             }
+        }
+        if (new_job) {
+            OBN_INFO("cover: LAN job '%s' plate %d on %s -> subtask id %s (ver %s)%s",
+                     subtask_name.c_str(), plate_idx, dev_id.c_str(),
+                     cover_id.c_str(),
+                     cover_version.empty() ? "-" : cover_version.c_str(),
+                     host.empty() ? "; no LAN session, no cover fetch" : "");
         }
         if (!host.empty()) {
             // COVER-01: choose the LISTING-MATCH key — gcode_file basename
