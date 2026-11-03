@@ -425,6 +425,7 @@ add_library(bambu_networking SHARED
     src/tunnel_local.cpp
     src/tunnel_upload.cpp
     src/tls_dial.cpp
+    src/model_metadata.cpp
     src/zip_read.cpp
 )
 
@@ -1001,6 +1002,7 @@ if(OBN_BUILD_TESTS)
         src/tls_dial.cpp
         src/tunnel_local.cpp
         src/tunnel_upload.cpp
+        src/model_metadata.cpp
         src/zip_read.cpp)
     target_include_directories(cover_cache_test PRIVATE include ${OBN_GENERATED_DIR})
     target_compile_definitions(cover_cache_test PRIVATE
@@ -1157,6 +1159,7 @@ if(OBN_BUILD_TESTS AND NOT WIN32)
         src/tls_dial.cpp
         src/tunnel_local.cpp
         src/tunnel_upload.cpp
+        src/model_metadata.cpp
         src/zip_read.cpp)
     target_include_directories(lan_live_test PRIVATE include ${OBN_GENERATED_DIR})
     target_compile_definitions(lan_live_test PRIVATE
@@ -1244,6 +1247,7 @@ if(OBN_BUILD_TESTS AND NOT WIN32)
         src/tls_dial.cpp
         src/tunnel_local.cpp
         src/tunnel_upload.cpp
+        src/model_metadata.cpp
         src/zip_read.cpp)
 
     # Pure-function tests for cloud_print.cpp (ams_mapping2_for_cloud,
@@ -1391,5 +1395,13 @@ if(OBN_BUILD_TESTS AND NOT WIN32)
         ZLIB::ZLIB
     )
     add_test(NAME model_title COMMAND model_title_test)
+
+    # .3mf project metadata (DesignModelId for cloud_for_makerworld_only).
+    add_executable(model_metadata_test tests/model_metadata_test.cpp
+        src/model_metadata.cpp
+        src/zip_read.cpp)
+    target_include_directories(model_metadata_test PRIVATE include)
+    target_link_libraries(model_metadata_test PRIVATE ZLIB::ZLIB)
+    add_test(NAME model_metadata COMMAND model_metadata_test)
 
 endif()
